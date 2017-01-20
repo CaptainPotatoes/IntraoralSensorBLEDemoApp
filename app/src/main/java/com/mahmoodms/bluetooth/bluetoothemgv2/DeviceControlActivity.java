@@ -589,7 +589,6 @@ public class DeviceControlActivity extends Activity implements BluetoothLe.Bluet
             public void run() {
                 if(percent <= batteryWarning){
                     Toast.makeText(getApplicationContext(), "Charge Battery, Battery Low", Toast.LENGTH_SHORT).show();
-                } else {
                 }
             }
         });
