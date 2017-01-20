@@ -14,12 +14,15 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.support.v4.app.NavUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
@@ -35,10 +38,16 @@ import com.androidplot.xy.SimpleXYSeries;
 import com.androidplot.xy.XYPlot;
 import com.androidplot.xy.XYStepMode;
 import com.beele.BluetoothLe;
+import com.opencsv.CSVWriter;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 
 /**
  * Created by mahmoodms on 5/31/2016.
@@ -56,13 +65,9 @@ public class DeviceControlActivity extends Activity implements BluetoothLe.Bluet
     private BluetoothGatt mBluetoothGatt = null;
     private BluetoothDevice mBluetoothDevice;
     //Layout - TextViews and Buttons
-    private TextView mDeviceNameView;
-    private TextView mAddressView;
 //    private TextView mBatteryLevel;
-    private TextView mConnectionState;
     private TextView mRssi;
-    private TextView mRawData;
-    private TextView mHexData;
+//    private TextView mRawData;
     private Button mExportButton;
 
     private Menu menu;
@@ -77,11 +82,13 @@ public class DeviceControlActivity extends Activity implements BluetoothLe.Bluet
     private XYPlot plot;
     private Redrawer redrawer;
     private SimpleXYSeries dataSeries;
-    private static final int HISTORY_SIZE = 400;
+    private static final int HISTORY_SIZE = 240;
     //Data Variables:
     private float dataVoltage;
     private int batteryWarning = 20;//%
-    private static ArrayList<Float> source_na_sensor_data = new ArrayList<>();
+    //TODO Change this to an array.
+//    private static ArrayList<Float> source_na_sensor_data = new ArrayList<>();
+    private static float ionSensorData[] = new float[240];
     //Intents:
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -107,19 +114,11 @@ public class DeviceControlActivity extends Activity implements BluetoothLe.Bluet
         //Flag to keep screen on (stay-awake):
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         //Set up TextViews
-        mDeviceNameView = (TextView) findViewById(R.id.textViewDeviceName);
-        mAddressView = (TextView) findViewById(R.id.textViewDeviceAddress);
         mRssi = (TextView) findViewById(R.id.textViewRssi);
-        mConnectionState = (TextView) findViewById(R.id.textViewStatus);
-        mRawData = (TextView) findViewById(R.id.rawData);
-        mHexData = (TextView) findViewById(R.id.signedHex);
+//        mRawData = (TextView) findViewById(R.id.rawData);
 //        mBatteryLevel = (TextView) findViewById(R.id.textViewBatteryLevel);
-//        mExportButton = (Button) findViewById(R.id.button_export);
-//        mRawData = (TextView) findViewById(R.id.textViewEmgSignal);
-//        mRawData.setTextColor(Color.parseColor("#FFFFFF"));
+        mExportButton = (Button) findViewById(R.id.button_export);
         //Initialize Bluetooth
-        mDeviceNameView.setText(mDeviceName);
-        mAddressView.setText(mDeviceAddress);
         ActionBar ab = getActionBar();
         ab.setTitle(mDeviceName);
         ab.setSubtitle(mDeviceAddress);
@@ -166,27 +165,96 @@ public class DeviceControlActivity extends Activity implements BluetoothLe.Bluet
         redrawer = new Redrawer(
                 Arrays.asList(new Plot[]{plot}),
                 100, false);
-        /*mExportButton.setOnClickListener(new View.OnClickListener() {
+        mExportButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(source_na_sensor_data!=null && source_na_sensor_data.size()!=0) {
-                    final Intent intent_export = new Intent(v.getContext(), ExportActivity.class);
-                    intent_export.putExtra("EXTRA_EMG_DATA", source_na_sensor_data);
-                    v.getContext().startActivity(intent_export);
-                } else {
-                    Toast.makeText(v.getContext(),"Not enough data to export!",Toast.LENGTH_SHORT).show();
-                }*//**//*
-
-
+                try {
+                    exportFile(false, true, "", 0.0);
+                } catch (IOException e) {
+                    Log.e("IOException", e.toString());
+                }
             }
-        });*/
+        });
+    }
+
+    private boolean fileExportInitialized = false;
+    private CSVWriter csvWriter;
+    private File file;
+    private File root;
+    private String[] valueCsvWrite = new String[1];
+
+    private int exportFileDataPointCounter = 0;
+    private int exportFilePart = 1;
+    private String fileTimeStamp = "";
+    public String getTimeStamp() {
+        return new SimpleDateFormat("yyyy.MM.dd_HH.mm.ss").format(new Date());
+    }
+
+    public void exportFile(boolean init, boolean terminateExport,
+                           String fileName, double ecgData) throws IOException {
+        if (init) {
+            root = Environment.getExternalStorageDirectory();
+            fileTimeStamp = fileName;
+            fileExportInitialized = true;
+        } else {
+            if (fileTimeStamp == null || fileTimeStamp.equals("") || !fileExportInitialized) {
+                fileTimeStamp = "IonSensorData_" + getTimeStamp();
+            }
+        }
+        if (root.canWrite() && init) {
+            File dir = new File(root.getAbsolutePath() + "/DataDirectory");
+            boolean mkdirsA = dir.mkdirs();
+            file = new File(dir, fileTimeStamp + "_part"+ String.valueOf(exportFilePart) + ".csv");
+            csvWriter = new CSVWriter(new FileWriter(file));
+            Log.d("New File Generated", fileTimeStamp + "_part"+ String.valueOf(exportFilePart) + ".csv");
+//            exportLogFile(false, "NEW FILE GENERATED: "+fileTimeStamp + "_part"+ String.valueOf(exportFilePart) + ".csv\r\n\r\n");
+//            if(exportFilePart!=1)exportLogFile(false, getDetails());
+        }
+        //Write Data to File (if init & terminateExport are both false)
+        if (!init && !terminateExport) {
+            //TODO: CHANGE THIS TO 1048576
+            if(exportFileDataPointCounter<1048575/*15000*/) {
+                valueCsvWrite[0] = ecgData + "";
+                csvWriter.writeNext(valueCsvWrite);
+                exportFileDataPointCounter++;
+            } else {
+                valueCsvWrite[0] = ecgData + "";
+                csvWriter.writeNext(valueCsvWrite);
+                csvWriter.flush();
+                csvWriter.close();
+                exportFileDataPointCounter=0;
+                exportFilePart++;
+                //generate new file:
+                exportFile(true, false, fileTimeStamp,0);
+            }
+
+        }
+        if (terminateExport) {
+            csvWriter.flush();
+            csvWriter.close();
+            Uri uii;
+            uii = Uri.fromFile(file);
+            Intent exportData = new Intent(Intent.ACTION_SEND);
+            exportData.putExtra(Intent.EXTRA_SUBJECT, "Ion Sensor Data Export Details");
+            exportData.putExtra(Intent.EXTRA_STREAM, uii);
+            exportData.setType("text/html");
+            startActivity(exportData);
+        }
     }
 
     @Override
     public void onResume() {
+        String fileTimeStampConcat = "IonSensorData_" + getTimeStamp();
+        Log.d("onResume-timeStamp", fileTimeStampConcat);
+        if(!fileExportInitialized) {
+            try {
+                exportFile(true, false, fileTimeStampConcat, 0.0);
+            } catch (IOException ex) {
+                Log.e("IOEXCEPTION:", ex.toString());
+            }
+        }
         redrawer.start();
         super.onResume();
-
     }
 
     @Override
@@ -264,7 +332,7 @@ public class DeviceControlActivity extends Activity implements BluetoothLe.Bluet
             @Override
             public void run() {
                 MenuItem menuItem = menu.findItem(R.id.action_status);
-                mConnectionState.setText("Connecting...");
+//                mConnectionState.setText("Connecting...");
                 menuItem.setTitle("Connecting...");
 //                invalidateOptionsMenu();
             }
@@ -323,6 +391,7 @@ public class DeviceControlActivity extends Activity implements BluetoothLe.Bluet
         if(AppConstant.CHAR_ION_NA_SIGNAL.equals(characteristic.getUuid())) {
             int dataIonSensor = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
             updateIonSensorState(dataIonSensor);
+            writeToDrive(dataIonSensor);
         }
         if(AppConstant.CHAR_EMG_SIGNAL.equals(characteristic.getUuid())) {
             byte[] dataEmgBytes = characteristic.getValue();
@@ -442,7 +511,7 @@ public class DeviceControlActivity extends Activity implements BluetoothLe.Bluet
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                mConnectionState.setText(status);
+//                mConnectionState.setText(status);
                 if(status.equals(getString(R.string.connected))) {
                     Toast.makeText(getApplicationContext(), "Device Connected!", Toast.LENGTH_SHORT).show();
                 } else if (status.equals(getString(R.string.disconnected))) {
@@ -461,9 +530,9 @@ public class DeviceControlActivity extends Activity implements BluetoothLe.Bluet
                 }
                 float temp = (float)value/65535;
                 dataVoltage = (float)(temp*1.2);
-                source_na_sensor_data.add(dataVoltage);
+//                source_na_sensor_data.add(dataVoltage);
                 dataSeries.addLast(null, dataVoltage);
-                mRawData.setText(String.valueOf(value));
+//                mRawData.setText(String.valueOf(value));
             }
         });
     }
@@ -471,7 +540,7 @@ public class DeviceControlActivity extends Activity implements BluetoothLe.Bluet
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                mHexData.setText(value);
+//                mHexData.setText(value);
             }
         });
     }
@@ -485,10 +554,21 @@ public class DeviceControlActivity extends Activity implements BluetoothLe.Bluet
                 }
                 float temp = (float)value/255;
                 dataVoltage = (float)(temp*1.2*2);
-                source_na_sensor_data.add(dataVoltage);
+                //TODO: Auto save voltage data.
+
                 dataSeries.addLast(null, dataVoltage);
             }
         });
+    }
+
+    private void writeToDrive(final int value) {
+        float temp = (float)value/255;
+        dataVoltage = (float)(temp*1.2*2);
+        try {
+            exportFile(false, false, "", dataVoltage);
+        } catch (IOException e) {
+            Log.e("IOException", e.toString());
+        }
     }
 
     private void batteryNotAvailable() {

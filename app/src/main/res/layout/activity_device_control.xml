@@ -55,130 +55,43 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         >
-    <GridLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/primary_grid_layout"
-        android:background="#FFFFFF"
-        android:layout_weight="1">
 
-        <TextView
+        <GridLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="Device Name: "
-            android:id="@+id/textView"
-            android:layout_row="0"
-            android:layout_column="0"
-            android:textColor="#000000"/>
+            android:id="@+id/primary_grid_layout"
+            android:background="#FFFFFF"
+            android:layout_weight="1">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="Device RSSI: "
-            android:id="@+id/textView3"
-            android:layout_row="2"
-            android:layout_column="0"
-            android:textColor="#000000"/>
+            <Button
+                style="?android:attr/buttonStyleSmall"
+                android:layout_width="114dp"
+                android:layout_height="wrap_content"
+                android:text="Export"
+                android:id="@+id/button_export"
+                android:textColor="#000000" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="- - -"
-            android:id="@+id/textViewRssi"
-            android:layout_row="2"
-            android:layout_column="1"
-            android:textColor="#000000"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:text="Device RSSI: "
+                android:id="@+id/textView3"
+                android:layout_row="0"
+                android:layout_column="1"
+                android:textColor="#000000"/>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="Small Text"
-            android:id="@+id/textViewDeviceName"
-            android:layout_row="0"
-            android:layout_column="1"
-            android:textColor="#000000"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:text="- - -"
+                android:id="@+id/textViewRssi"
+                android:layout_row="0"
+                android:layout_column="2"
+                android:textColor="#000000"/>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text=", "
-            android:id="@+id/textView2"
-            android:layout_row="0"
-            android:layout_column="2"
-            android:textColor="#000000"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="Small Text"
-            android:id="@+id/textViewDeviceAddress"
-            android:layout_row="0"
-            android:layout_column="3"
-            android:textColor="#000000"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="Status: "
-            android:id="@+id/textView4"
-            android:layout_row="0"
-            android:layout_column="5"
-            android:textColor="#000000"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="connecting ..."
-            android:id="@+id/textViewStatus"
-            android:layout_row="0"
-            android:layout_column="6"
-            android:textColor="#000000"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="(sint16):"
-            android:id="@+id/textView5"
-            android:layout_row="2"
-            android:layout_column="3"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="Small Text"
-            android:id="@+id/rawData"
-            android:layout_row="2"
-            android:layout_column="4"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="Hex(s):"
-            android:id="@+id/textView6"
-            android:layout_row="2"
-            android:layout_column="5"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="Small Text"
-            android:id="@+id/signedHex"
-            android:layout_row="2"
-            android:layout_column="6"/>
-
-    </GridLayout>
+        </GridLayout>
 
         <!--<Button
             style="?android:attr/buttonStyleSmall"
