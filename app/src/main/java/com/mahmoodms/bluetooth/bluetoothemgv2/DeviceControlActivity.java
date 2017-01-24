@@ -129,7 +129,7 @@ public class DeviceControlActivity extends Activity implements BluetoothLe.Bluet
         //Todo: temporarily uses - find alternate (seconds)
         dataSeries.useImplicitXVals();
         plot = (XYPlot) findViewById(R.id.plot);
-        plot.setRangeBoundaries(-0.6, 0.6, BoundaryMode.FIXED);
+        plot.setRangeBoundaries(0, 1.2, BoundaryMode.FIXED);
         plot.setDomainBoundaries(0, HISTORY_SIZE, BoundaryMode.FIXED);
         plot.setDomainStepMode(XYStepMode.INCREMENT_BY_VAL);
         plot.setDomainStepValue(HISTORY_SIZE/10);
@@ -156,9 +156,11 @@ public class DeviceControlActivity extends Activity implements BluetoothLe.Bluet
         plot.getLegendWidget().getTextPaint().setTextSize(20);
         plot.getTitleWidget().getLabelPaint().setTextSize(20);
         plot.getTitleWidget().getLabelPaint().setColor(Color.BLACK);
+
         LineAndPointFormatter lineAndPointFormatter = new LineAndPointFormatter(Color.BLACK,null,null,null);
         lineAndPointFormatter.getLinePaint().setStrokeWidth(8);
         plot.addSeries(dataSeries, lineAndPointFormatter/*new LineAndPointFormatter(Color.rgb(200, 0, 0), null, null, null)*/);
+        //What does this do????
         final PlotStatistics histStats = new PlotStatistics(1000, false);
         plot.addListener(histStats);
 
@@ -555,7 +557,6 @@ public class DeviceControlActivity extends Activity implements BluetoothLe.Bluet
                 float temp = (float)value/255;
                 dataVoltage = (float)(temp*1.2*2);
                 //TODO: Auto save voltage data.
-
                 dataSeries.addLast(null, dataVoltage);
             }
         });
@@ -563,7 +564,7 @@ public class DeviceControlActivity extends Activity implements BluetoothLe.Bluet
 
     private void writeToDrive(final int value) {
         float temp = (float)value/255;
-        dataVoltage = (float)(temp*1.2*2);
+        dataVoltage = (float)(temp*2.4);
         try {
             exportFile(false, false, "", dataVoltage);
         } catch (IOException e) {
