@@ -17,3 +17,4 @@ app/src/test/java/com/mahmoodms/bluetooth/bluetoothemgv2/ExampleUnitTest.java
 gradle/wrapper/gradle-wrapper.jar
 gradlew
 gradlew.bat
+BeeLeLibrary/build/
