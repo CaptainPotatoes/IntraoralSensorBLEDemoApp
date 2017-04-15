@@ -51,47 +51,50 @@
 
     <LinearLayout
         android:orientation="horizontal"
-        android:gravity="center"
+        android:gravity="start"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         >
 
-        <GridLayout
+        <Button
+            android:id="@+id/button_export"
+            style="?android:attr/buttonStyleSmall"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/primary_grid_layout"
-            android:background="#FFFFFF"
-            android:layout_weight="1">
+            android:text="Export"
+            android:textColor="#000000" />
 
-            <Button
-                style="?android:attr/buttonStyleSmall"
-                android:layout_width="114dp"
-                android:layout_height="wrap_content"
-                android:text="Export"
-                android:id="@+id/button_export"
-                android:textColor="#000000" />
+        <TextView
+            android:id="@+id/textView3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_column="1"
+            android:layout_row="0"
+            android:text="Device RSSI: "
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textColor="#000000" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceSmall"
-                android:text="Device RSSI: "
-                android:id="@+id/textView3"
-                android:layout_row="0"
-                android:layout_column="1"
-                android:textColor="#000000"/>
+        <TextView
+            android:id="@+id/textViewRssi"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_column="2"
+            android:layout_row="0"
+            android:text="- - -"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textColor="#000000" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceSmall"
-                android:text="- - -"
-                android:id="@+id/textViewRssi"
-                android:layout_row="0"
-                android:layout_column="2"
-                android:textColor="#000000"/>
+        <ToggleButton
+            android:id="@+id/offsetToggle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ToggleButton" />
 
-        </GridLayout>
+        <ToggleButton
+            android:id="@+id/graphScaleToggle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ToggleButton" />
 
         <!--<Button
             style="?android:attr/buttonStyleSmall"

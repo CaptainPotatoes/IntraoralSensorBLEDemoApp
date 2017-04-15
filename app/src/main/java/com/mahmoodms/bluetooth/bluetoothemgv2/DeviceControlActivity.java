@@ -25,8 +25,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 
 import com.androidplot.Plot;
@@ -171,88 +173,153 @@ public class DeviceControlActivity extends Activity implements BluetoothLe.Bluet
             @Override
             public void onClick(View v) {
                 try {
-                    exportFile(false, true, "", 0.0);
+                    saveDataFile(true);
                 } catch (IOException e) {
-                    Log.e("IOException", e.toString());
+                    Log.e(TAG, "IOException in saveDataFile");
+                    e.printStackTrace();
+                }
+                Uri uii;
+                uii = Uri.fromFile(file);
+                Intent exportData = new Intent(Intent.ACTION_SEND);
+                exportData.putExtra(Intent.EXTRA_SUBJECT, "Ion Sensor Data Export Details");
+                exportData.putExtra(Intent.EXTRA_STREAM, uii);
+                exportData.setType("text/html");
+                startActivity(exportData);
+            }
+        });
+        ToggleButton toggleButton = (ToggleButton) findViewById(R.id.offsetToggle);
+        toggleButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                isOffsetEnabled = b;
+            }
+        });
+        ToggleButton graphToggleButton = (ToggleButton) findViewById(R.id.graphScaleToggle);
+        graphToggleButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                if(b) {
+                    plot.setRangeBoundaries(0, 2.4, BoundaryMode.FIXED);
+                } else {
+                    plot.setRangeBoundaries(0, 1.2, BoundaryMode.FIXED);
                 }
             }
         });
     }
 
-    private boolean fileExportInitialized = false;
+    private boolean fileSaveInitialized = false;
     private CSVWriter csvWriter;
     private File file;
     private File root;
-    private String[] valueCsvWrite = new String[1];
-
-    private int exportFileDataPointCounter = 0;
-    private int exportFilePart = 1;
     private String fileTimeStamp = "";
     public String getTimeStamp() {
         return new SimpleDateFormat("yyyy.MM.dd_HH.mm.ss").format(new Date());
     }
 
-    public void exportFile(boolean init, boolean terminateExport,
-                           String fileName, double ecgData) throws IOException {
-        if (init) {
-            root = Environment.getExternalStorageDirectory();
-            fileTimeStamp = fileName;
-            fileExportInitialized = true;
-        } else {
-            if (fileTimeStamp == null || fileTimeStamp.equals("") || !fileExportInitialized) {
-                fileTimeStamp = "IonSensorData_" + getTimeStamp();
-            }
-        }
-        if (root.canWrite() && init) {
-            File dir = new File(root.getAbsolutePath() + "/DataDirectory");
-            boolean mkdirsA = dir.mkdirs();
-            file = new File(dir, fileTimeStamp + "_part"+ String.valueOf(exportFilePart) + ".csv");
-            csvWriter = new CSVWriter(new FileWriter(file));
-            Log.d("New File Generated", fileTimeStamp + "_part"+ String.valueOf(exportFilePart) + ".csv");
-//            exportLogFile(false, "NEW FILE GENERATED: "+fileTimeStamp + "_part"+ String.valueOf(exportFilePart) + ".csv\r\n\r\n");
-//            if(exportFilePart!=1)exportLogFile(false, getDetails());
-        }
-        //Write Data to File (if init & terminateExport are both false)
-        if (!init && !terminateExport) {
-            //TODO: CHANGE THIS TO 1048576
-            if(exportFileDataPointCounter<1048575/*15000*/) {
-                valueCsvWrite[0] = ecgData + "";
-                csvWriter.writeNext(valueCsvWrite);
-                exportFileDataPointCounter++;
-            } else {
-                valueCsvWrite[0] = ecgData + "";
-                csvWriter.writeNext(valueCsvWrite);
-                csvWriter.flush();
-                csvWriter.close();
-                exportFileDataPointCounter=0;
-                exportFilePart++;
-                //generate new file:
-                exportFile(true, false, fileTimeStamp,0);
-            }
-
-        }
-        if (terminateExport) {
+    public void saveDataFile(boolean terminate) throws IOException {
+        if(terminate && fileSaveInitialized) {
             csvWriter.flush();
             csvWriter.close();
-            Uri uii;
-            uii = Uri.fromFile(file);
-            Intent exportData = new Intent(Intent.ACTION_SEND);
-            exportData.putExtra(Intent.EXTRA_SUBJECT, "Ion Sensor Data Export Details");
-            exportData.putExtra(Intent.EXTRA_STREAM, uii);
-            exportData.setType("text/html");
-            startActivity(exportData);
+            fileSaveInitialized = false;
         }
     }
+
+    public void saveDataFile() throws IOException {
+        root = Environment.getExternalStorageDirectory();
+        fileTimeStamp = "IonSensorData_"+getTimeStamp();
+        if(root.canWrite()) {
+            File dir = new File(root.getAbsolutePath()+"/IonSensorData");
+            dir.mkdirs();
+            file = new File(dir, fileTimeStamp+".csv");
+            if(file.exists() && !file.isDirectory()) {
+                Log.d(TAG, "File "+file.toString()+" already exists - appending data");
+                FileWriter fileWriter = new FileWriter(file, true);
+                csvWriter = new CSVWriter(fileWriter);
+            } else {
+                csvWriter = new CSVWriter(new FileWriter(file));
+            }
+            fileSaveInitialized = csvWriter!=null;
+        }
+    }
+
+    private String[] ionSensorWriteString = new String[1];
+
+    public void saveDataFile(double ionSensorData) {
+        if(fileSaveInitialized) {
+            ionSensorWriteString[0] = ionSensorData+"";
+            csvWriter.writeNext(ionSensorWriteString, false);
+        } else {
+            try {
+                saveDataFile();
+            } catch (IOException e) {
+                Log.e(TAG, "IOException in saveDataFile()");
+                e.printStackTrace();
+            }
+        }
+    }
+
+//    public void exportFile(boolean init, boolean terminateExport,
+//                           String fileName, double ecgData) throws IOException {
+//        if (init) {
+//            root = Environment.getExternalStorageDirectory();
+//            fileTimeStamp = fileName;
+//            fileExportInitialized = true;
+//        } else {
+//            if (fileTimeStamp == null || fileTimeStamp.equals("") || !fileExportInitialized) {
+//                fileTimeStamp = "IonSensorData_" + getTimeStamp();
+//            }
+//        }
+//        if (root.canWrite() && init) {
+//            File dir = new File(root.getAbsolutePath() + "/DataDirectory");
+//            boolean mkdirsA = dir.mkdirs();
+//            file = new File(dir, fileTimeStamp + "_part"+ String.valueOf(exportFilePart) + ".csv");
+//            csvWriter = new CSVWriter(new FileWriter(file));
+//            Log.d("New File Generated", fileTimeStamp + "_part"+ String.valueOf(exportFilePart) + ".csv");
+////            exportLogFile(false, "NEW FILE GENERATED: "+fileTimeStamp + "_part"+ String.valueOf(exportFilePart) + ".csv\r\n\r\n");
+////            if(exportFilePart!=1)exportLogFile(false, getDetails());
+//        }
+//        //Write Data to File (if init & terminateExport are both false)
+//        if (!init && !terminateExport) {
+//            if(exportFileDataPointCounter<104857515) {
+//                valueCsvWrite[0] = ecgData + "";
+//                csvWriter.writeNext(valueCsvWrite);
+//                exportFileDataPointCounter++;
+//            } else {
+//                valueCsvWrite[0] = ecgData + "";
+//                csvWriter.writeNext(valueCsvWrite);
+//                csvWriter.flush();
+//                csvWriter.close();
+//                exportFileDataPointCounter=0;
+//                exportFilePart++;
+//                //generate new file:
+//                exportFile(true, false, fileTimeStamp,0);
+//            }
+//
+//        }
+//        if (terminateExport) {
+//            csvWriter.flush();
+//            csvWriter.close();
+//            Uri uii;
+//            uii = Uri.fromFile(file);
+//            Intent exportData = new Intent(Intent.ACTION_SEND);
+//            exportData.putExtra(Intent.EXTRA_SUBJECT, "Ion Sensor Data Export Details");
+//            exportData.putExtra(Intent.EXTRA_STREAM, uii);
+//            exportData.setType("text/html");
+//            startActivity(exportData);
+//        }
+//    }
 
     @Override
     public void onResume() {
         String fileTimeStampConcat = "IonSensorData_" + getTimeStamp();
         Log.d("onResume-timeStamp", fileTimeStampConcat);
-        if(!fileExportInitialized) {
+        if(!fileSaveInitialized) {
+            //TODO;
             try {
-                exportFile(true, false, fileTimeStampConcat, 0.0);
-            } catch (IOException ex) {
-                Log.e("IOEXCEPTION:", ex.toString());
+                saveDataFile();
+            } catch (IOException e) {
+                Log.e(TAG, "IOException in saveDataFile");
+                e.printStackTrace();
             }
         }
         redrawer.start();
@@ -261,6 +328,12 @@ public class DeviceControlActivity extends Activity implements BluetoothLe.Bluet
 
     @Override
     protected void onPause() {
+        try {
+            saveDataFile(true);
+        } catch (IOException e) {
+            Log.e(TAG, "IOException in saveDataFile");
+            e.printStackTrace();
+        }
         redrawer.pause();
         stopMonitoringRssiValue();
         mBluetoothLe.disconnect(mBluetoothGatt);
@@ -284,6 +357,12 @@ public class DeviceControlActivity extends Activity implements BluetoothLe.Bluet
 
     @Override
     protected void onDestroy() {
+        try {
+            saveDataFile(true);
+        } catch (IOException e) {
+            Log.e(TAG, "IOException in saveDataFile");
+            e.printStackTrace();
+        }
         redrawer.finish();
         super.onDestroy();
     }
@@ -393,7 +472,7 @@ public class DeviceControlActivity extends Activity implements BluetoothLe.Bluet
         if(AppConstant.CHAR_ION_NA_SIGNAL.equals(characteristic.getUuid())) {
             int dataIonSensor = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
             updateIonSensorState(dataIonSensor);
-            writeToDrive(dataIonSensor);
+//            writeToDrive(dataIonSensor);
         }
         if(AppConstant.CHAR_EMG_SIGNAL.equals(characteristic.getUuid())) {
             byte[] dataEmgBytes = characteristic.getValue();
@@ -547,6 +626,17 @@ public class DeviceControlActivity extends Activity implements BluetoothLe.Bluet
         });
     }
 
+    private boolean isOffsetEnabled = false;
+
+    private double calculateVoltage(final int v) {
+        double c = (double)v/255.0;
+        if(isOffsetEnabled)
+            return (c*2.4 + 0.3);
+        else
+            return (c*2.4);
+
+    }
+
     private void updateIonSensorState(final int value) {
         runOnUiThread(new Runnable() {
             @Override
@@ -554,22 +644,10 @@ public class DeviceControlActivity extends Activity implements BluetoothLe.Bluet
                 if(dataSeries.size() > HISTORY_SIZE) {
                     dataSeries.removeFirst();
                 }
-                float temp = (float)value/255;
-                dataVoltage = (float)(temp*1.2*2);
-                //TODO: Auto save voltage data.
-                dataSeries.addLast(null, dataVoltage);
+                dataSeries.addLast(null, calculateVoltage(value));
+                saveDataFile(calculateVoltage(value));
             }
         });
-    }
-
-    private void writeToDrive(final int value) {
-        float temp = (float)value/255;
-        dataVoltage = (float)(temp*2.4);
-        try {
-            exportFile(false, false, "", dataVoltage);
-        } catch (IOException e) {
-            Log.e("IOException", e.toString());
-        }
     }
 
     private void batteryNotAvailable() {
