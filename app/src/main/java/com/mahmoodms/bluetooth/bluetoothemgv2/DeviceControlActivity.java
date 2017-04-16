@@ -200,8 +200,10 @@ public class DeviceControlActivity extends Activity implements BluetoothLe.Bluet
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 if(b) {
                     plot.setRangeBoundaries(0, 2.4, BoundaryMode.FIXED);
+                    plot.setRangeStepValue(0.6);
                 } else {
                     plot.setRangeBoundaries(0, 1.2, BoundaryMode.FIXED);
+                    plot.setRangeStepValue(0.3);
                 }
             }
         });
@@ -631,9 +633,9 @@ public class DeviceControlActivity extends Activity implements BluetoothLe.Bluet
     private double calculateVoltage(final int v) {
         double c = (double)v/255.0;
         if(isOffsetEnabled)
-            return (c*2.4 + 0.3);
+            return (c*1.2 + 0.3);
         else
-            return (c*2.4);
+            return (c*1.2);
 
     }
 
