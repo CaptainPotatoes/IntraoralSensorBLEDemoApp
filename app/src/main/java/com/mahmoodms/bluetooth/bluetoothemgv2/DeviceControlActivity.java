@@ -191,7 +191,10 @@ public class DeviceControlActivity extends Activity implements BluetoothLe.Bluet
         toggleButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                isOffsetEnabled = b;
+               if (b)
+                   isOffsetEnabled = 1;
+               else
+                   isOffsetEnabled = 0;
             }
         });
         ToggleButton graphToggleButton = (ToggleButton) findViewById(R.id.graphScaleToggle);
@@ -204,6 +207,17 @@ public class DeviceControlActivity extends Activity implements BluetoothLe.Bluet
                 } else {
                     plot.setRangeBoundaries(0, 1.2, BoundaryMode.FIXED);
                     plot.setRangeStepValue(0.3);
+                }
+            }
+        });
+        ToggleButton toggleButton1 = (ToggleButton) findViewById(R.id.toggle48);
+        toggleButton1.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                if (b) {
+                    isOffsetEnabled = 2;
+                } else {
+                    isOffsetEnabled = 0;
                 }
             }
         });
@@ -628,15 +642,16 @@ public class DeviceControlActivity extends Activity implements BluetoothLe.Bluet
         });
     }
 
-    private boolean isOffsetEnabled = false;
+    private int isOffsetEnabled = 0;
 
     private double calculateVoltage(final int v) {
         double c = (double)v/255.0;
-        if(isOffsetEnabled)
-            return (c*1.2 + 0.3);
+        if(isOffsetEnabled==1)
+            return (c*2.4+0.3);
+        else if (isOffsetEnabled == 2)
+            return (c*4.8);
         else
-            return (c*1.2);
-
+            return (2.4*c);
     }
 
     private void updateIonSensorState(final int value) {
